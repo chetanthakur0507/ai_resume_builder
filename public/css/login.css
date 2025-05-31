@@ -1,0 +1,123 @@
+/* * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background: linear-gradient(to right, #f0f4ff, #e1eaff);
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+h3, h4 {
+    color: #1f2937;
+}
+
+form {
+    background-color: #ffffff;
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    animation: fadeIn 1s ease-in-out;
+    transition: transform 0.3s ease;
+}
+
+form:hover {
+    transform: scale(1.02);
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+    padding: 12px 15px;
+    margin-bottom: 16px;
+    width: 100%;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    background-color: #f1f5f9;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    background-color: #fff;
+}
+
+input[type="submit"] {
+    background-color: #3b82f6;
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+input[type="submit"]:hover {
+    background-color: #2563eb;
+    transform: translateY(-2px);
+}
+
+.text-blue-400 {
+    color: #60a5fa;
+}
+
+.bg-red-500 {
+    background-color: #ef4444;
+}
+
+.text-white {
+    color: #ffffff;
+}
+
+.absolute {
+    position: absolute;
+}
+
+.rounded-md {
+    border-radius: 10px;
+}
+
+.p-3 {
+    padding: 12px;
+}
+
+.top-5 {
+    top: 1.25rem;
+}
+
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+Responsive
+@media (max-width: 768px) {
+    .w-full.h-screen.flex.px-20 {
+        flex-direction: column;
+        padding: 10px;
+    }
+
+    .w-1/2 {
+        width: 100%;
+    }
+
+    form {
+        margin-bottom: 2rem;
+    }
+ */

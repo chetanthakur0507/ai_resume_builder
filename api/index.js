@@ -4,6 +4,22 @@ const bodyParser = require("body-parser")
 const puppeteer = require("puppeteer")
 
 const app = express()
+const session = require("express-session");
+const bcrypt = require("bcrypt");
+const User = require("./models/User");      
+require("./db/connect");                     
+
+
+
+// Session config
+app.use(session({
+  secret: "resume-secret",
+  resave: false,
+  saveUninitialized: false
+}));
+
+// Middleware for form parsing
+app.use(express.urlencoded({ extended: true }));
 
 // Set up EJS as the view engine
 app.set("view engine", "ejs")
@@ -16,8 +32,115 @@ app.use(bodyParser.json())
 
 // Routes
 app.get("/", (req, res) => {
-  res.render("index")
-})
+  res.render("register", { error: null });
+});
+
+app.get("/index", (req, res) => {
+  if (!req.session.userId) {
+    return res.redirect("/register");
+  }
+  res.render("index", { userId: req.session.userId });
+});
+
+// Register GET - show register page (optional)
+app.get("/register", (req, res) => {
+  res.render("register", { error: null });
+});
+
+// Register POST
+app.post("/users/register", async (req, res) => {
+  try {
+    const { fullname, email, password } = req.body;
+
+    // Basic validation
+    if (!fullname || !email || !password) {
+      return res.render("register", { error: "Please fill all fields" });
+    }
+
+    // Check if user exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.render("register", { error: "Email already registered" });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create user
+    const user = new User({
+      fullname,
+      email,
+      password: hashedPassword
+    });
+
+    await user.save();
+
+    // Create session
+    req.session.userId = user._id;
+
+    // Redirect to index page after register
+    res.redirect("/index");
+  } catch (error) {
+    console.error(error);
+    res.render("register", { error: "Something went wrong" });
+  }
+});
+
+// Login GET - show login page (optional)
+app.get("/login", (req, res) => {
+  res.render("login", { error: null });
+});
+
+// Login POST
+app.post("/users/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.render("login", { error: "Please enter email and password" });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.render("login", { error: "Invalid email or password" });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.render("login", { error: "Invalid email or password" });
+    }
+
+    // Create session
+    req.session.userId = user._id;
+
+    // Redirect to index page after login
+    res.redirect("/index");
+  } catch (error) {
+    console.error(error);
+    res.render("login", { error: "Something went wrong" });
+  }
+});
+
+// Index route (protected example)
+app.get("/index", (req, res) => {
+  if (!req.session.userId) {
+    return res.redirect("/login");
+  }
+  res.render("index", { userId: req.session.userId });
+});
+
+// Logout route (optional)
+app.get("/logout", (req, res) => {
+  req.session.destroy(err => {
+    if (err) {
+      console.error(err);
+    }
+    res.redirect("/register");
+  });
+});
+
+
+
 
 // Handle form submission
 app.post("/generate-resume", (req, res) => {

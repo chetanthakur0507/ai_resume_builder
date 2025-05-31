@@ -1,0 +1,103 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login page</title>
+    <link rel="stylesheet" href="/css/login.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+
+</head>
+<body>
+
+   <% if (error && error.length > 0) { %>
+  <div class="absolute top-5 left-1/2 -translate-x-1/2 -translate-y-1/2 p-3 rounded-md bg-red-500">
+    <span class="inline-block mt-1 mb-1 text-white">
+      <%= error %>
+    </span>
+  </div>
+<% } %>
+
+
+
+ 
+                  <div class="w-1/2 flex items-center justify-center h-screen"> 
+                    <div class="w-full px-32">
+                        <h4 class="text-2xl capitalize mb-5">login your account</h4>
+                        <form autocomplete="off" action="/users/login" method="post">
+                            <input
+                                class="block bg-zinc-100 w-full px-3 py-2 border-[1px] rounded-md mb-3 border-zinc-200"
+                                type="email" placeholder="Email" name="email">
+                            <input
+                                class="block bg-zinc-100 w-full px-3 py-2 border-[1px] rounded-md mb-3 border-zinc-200"
+                                type="password" placeholder="Password" name="password">
+                            <input class="px-5 block rounded-full py-3 mt-2 bg-blue-500 text-white" type="submit"
+                                value="Login">
+                        </form>
+                    </div>
+                </div>
+
+
+
+            </div>  
+
+
+
+
+           
+</body>
+</html> -->
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login - AI Resume Builder</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+  <div class="bg-white shadow-lg rounded-lg p-10 max-w-md w-full">
+    <h2 class="text-3xl font-semibold mb-6 text-center text-blue-600">Login to Your Account</h2>
+
+    <% if (error && error.length > 0) { %>
+      <div class="bg-red-500 text-white p-3 rounded mb-4 text-center">
+        <%= error %>
+      </div>
+    <% } %>
+
+    <form action="/users/login" method="POST" autocomplete="off" class="space-y-5">
+      <input
+        type="email"
+        name="email"
+        placeholder="Email"
+        required
+        class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+      />
+      <input
+        type="password"
+        name="password"
+        placeholder="Password"
+        required
+        class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+      />
+
+      <button
+        type="submit"
+        class="w-full bg-blue-600 text-white py-3 rounded hover:bg-blue-700 transition duration-300"
+      >
+        Login
+      </button>
+    </form>
+
+    <p class="mt-6 text-center text-gray-600">
+      Don't have an account?
+      <a href="/register" class="text-blue-500 hover:underline">Register here</a>
+    </p>
+  </div>
+
+</body>
+</html>
