@@ -6,9 +6,16 @@ const puppeteer = require("puppeteer")
 const app = express()
 const session = require("express-session");
 const bcrypt = require("bcrypt");
-const User = require("./models/User");      
-require("./db/connect");                     
+const User = require("./models/User");   
+const Template = require('./models/Template');   
+const templateRoutes = require('./routes/templates'); 
+const adminRoutes = require("./routes/admin");
+app.use("/admin", adminRoutes);
 
+require("./db/connect");        
+            
+// Connect routes
+app.use('/templates', templateRoutes);
 
 
 // Session config
@@ -23,7 +30,11 @@ app.use(express.urlencoded({ extended: true }));
 
 // Set up EJS as the view engine
 app.set("view engine", "ejs")
-app.set("views", path.join(__dirname, "..", "views"))
+
+app.set('views', path.join(__dirname, '..', 'views'));
+
+
+
 
 // Middleware
 app.use(express.static(path.join(__dirname, "..", "public")))
@@ -79,7 +90,7 @@ app.post("/users/register", async (req, res) => {
     req.session.userId = user._id;
 
     // Redirect to index page after register
-    res.redirect("/index");
+    res.redirect("/select-template");
   } catch (error) {
     console.error(error);
     res.render("register", { error: "Something went wrong" });
@@ -114,7 +125,7 @@ app.post("/users/login", async (req, res) => {
     req.session.userId = user._id;
 
     // Redirect to index page after login
-    res.redirect("/index");
+    res.redirect("/templates/select");
   } catch (error) {
     console.error(error);
     res.render("login", { error: "Something went wrong" });
@@ -138,6 +149,10 @@ app.get("/logout", (req, res) => {
     res.redirect("/register");
   });
 });
+
+
+
+
 
 
 
@@ -425,6 +440,5 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
-
 
 

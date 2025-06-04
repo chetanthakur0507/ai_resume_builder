@@ -1,0 +1,64 @@
+<!-- views/select-template.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Select Resume Template</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-6">
+  <div class="max-w-6xl mx-auto">
+    <h2 class="text-3xl font-semibold text-center text-blue-600 mb-10">Choose a Resume Template</h2>
+
+    <!-- <% if (templates.length === 0) { %>
+      <p class="text-center text-red-600">No templates available.</p>
+    <% } else { %> -->
+
+    <div class="w-64 h-64 rounded-lg overflow-hidden shadow-lg">
+  <img src="./images/template1.png" alt="Photo" class="w-full h-full object-cover" />
+</div>
+
+
+    <form action="/templates/select" method="POST">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <% templates.forEach(template => { %>
+          <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition duration-300 border">
+            <% if (template.previewImage) { %>
+              <img src="<%= template.previewImage %>" alt="<%= template.name %>" class="w-full h-48 object-cover" />
+            <% } else { %>
+              <div class="w-full h-48 bg-gray-200 flex items-center justify-center text-gray-500">No Preview</div>
+            <% } %>
+
+            <div class="p-4">
+              <h3 class="text-xl font-medium mb-2"><%= template.name %></h3>
+              
+              <label class="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  name="template"
+                  value="<%= template.file %>"
+                  class="accent-blue-500"
+                  required
+                />
+                <span>Select this template</span>
+              </label>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+
+      <div class="mt-8 text-center">
+        <button
+          type="submit"
+          class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full text-lg transition"
+        >
+          Use Selected Template
+        </button>
+      </div>
+    </form>
+
+    <% } %>
+  </div>
+</body>
+</html>
