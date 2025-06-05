@@ -1,157 +1,115 @@
-const express = require("express")
-const path = require("path")
-const bodyParser = require("body-parser")
-const puppeteer = require("puppeteer")
-
-const app = express()
+const express = require("express");
+const path = require("path");
 const session = require("express-session");
-const bcrypt = require("bcrypt");
-const User = require("./models/User");   
-const Template = require('./models/Template');   
-const templateRoutes = require('./routes/templates'); 
+const bodyParser = require("body-parser");
+const mongoose = require("mongoose");
+const app = express();
+
+// DB connection
+require("./db/connect");
+
+// Models
+const User = require("./models/User");
+
+// Routes & Middleware
+const templateRoutes = require("./routes/templates");
+const isAuthenticated = require("../middlewares/isAuthenticated");
 const adminRoutes = require("./routes/admin");
+
 app.use("/admin", adminRoutes);
 
-require("./db/connect");        
-            
-// Connect routes
-app.use('/templates', templateRoutes);
+// View engine & static
+app.set("view engine", "ejs");
+app.set('views', path.join(__dirname, '..', 'views'));
+app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static('public'));
 
-
-// Session config
+// Middlewares
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 app.use(session({
   secret: "resume-secret",
   resave: false,
   saveUninitialized: false
 }));
 
-// Middleware for form parsing
+
+
+// Static folder for images
+app.use(express.static('public'));
+
+// URL-encoded middleware (POST data ke liye)
 app.use(express.urlencoded({ extended: true }));
 
-// Set up EJS as the view engine
-app.set("view engine", "ejs")
+// Your GET route for templates
+app.get('/templates/select', isAuthenticated, (req, res) => {
+  const templates = [
+    { name: 'Template 1', previewImage: '/images/template1.png', file: 'temp1.ejs' },
+    { name: 'Template 2', previewImage: '/images/template1.png', file: 'temp2.ejs' },
+     { name: 'Template 1', previewImage: '/images/template1.png', file: 'temp1.ejs' },
+    { name: 'Template 2', previewImage: '/images/template1.png', file: 'temp2.ejs' },
+     { name: 'Template 1', previewImage: '/images/template1.png', file: 'temp1.ejs' },
+    { name: 'Template 2', previewImage: '/images/template1.png', file: 'temp2.ejs' },
+     { name: 'Template 1', previewImage: '/images/template1.png', file: 'temp1.ejs' },
+    { name: 'Template 2', previewImage: '/images/template1.png', file: 'temp2.ejs' },
+     { name: 'Template 1', previewImage: '/images/template1.png', file: 'temp1.ejs' },
+    { name: 'Template 2', previewImage: '/images/template1.png', file: 'temp2.ejs' },
+    { name: 'Template 3', previewImage: '/images/template1.png', file: 'temp3.ejs' }
+  ];
 
-app.set('views', path.join(__dirname, '..', 'views'));
+  res.render('select-template', { templates: templates });
+});
 
 
-
-
-// Middleware
-app.use(express.static(path.join(__dirname, "..", "public")))
-app.use(bodyParser.urlencoded({ extended: true }))
-app.use(bodyParser.json())
+// Authentication Protected Route
+app.use("/templates", isAuthenticated, templateRoutes);
 
 // Routes
 app.get("/", (req, res) => {
-  res.render("register", { error: null });
+  res.redirect("/register");
 });
 
-app.get("/index", (req, res) => {
-  if (!req.session.userId) {
-    return res.redirect("/register");
-  }
-  res.render("index", { userId: req.session.userId });
-});
-
-// Register GET - show register page (optional)
 app.get("/register", (req, res) => {
   res.render("register", { error: null });
 });
 
-// Register POST
 app.post("/users/register", async (req, res) => {
-  try {
-    const { fullname, email, password } = req.body;
-
-    // Basic validation
-    if (!fullname || !email || !password) {
-      return res.render("register", { error: "Please fill all fields" });
-    }
-
-    // Check if user exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.render("register", { error: "Email already registered" });
-    }
-
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create user
-    const user = new User({
-      fullname,
-      email,
-      password: hashedPassword
-    });
-
-    await user.save();
-
-    // Create session
-    req.session.userId = user._id;
-
-    // Redirect to index page after register
-    res.redirect("/select-template");
-  } catch (error) {
-    console.error(error);
-    res.render("register", { error: "Something went wrong" });
+  const { fullname, email, password } = req.body;
+  if (!fullname || !email || !password) {
+    return res.render("register", { error: "Please fill all fields" });
   }
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    return res.render("register", { error: "Email already exists" });
+  }
+  const bcrypt = require("bcrypt");
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const user = new User({ fullname, email, password: hashedPassword });
+  await user.save();
+  req.session.userId = user._id;
+  res.redirect("/templates/select");
 });
 
-// Login GET - show login page (optional)
 app.get("/login", (req, res) => {
   res.render("login", { error: null });
 });
 
-// Login POST
 app.post("/users/login", async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.render("login", { error: "Please enter email and password" });
-    }
-
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.render("login", { error: "Invalid email or password" });
-    }
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.render("login", { error: "Invalid email or password" });
-    }
-
-    // Create session
-    req.session.userId = user._id;
-
-    // Redirect to index page after login
-    res.redirect("/templates/select");
-  } catch (error) {
-    console.error(error);
-    res.render("login", { error: "Something went wrong" });
+  const { email, password } = req.body;
+  const user = await User.findOne({ email });
+  if (!user || !(await require("bcrypt").compare(password, user.password))) {
+    return res.render("login", { error: "Invalid credentials" });
   }
+  req.session.userId = user._id;
+  res.redirect("/templates/select");
 });
 
-// Index route (protected example)
-app.get("/index", (req, res) => {
-  if (!req.session.userId) {
-    return res.redirect("/login");
-  }
-  res.render("index", { userId: req.session.userId });
-});
-
-// Logout route (optional)
 app.get("/logout", (req, res) => {
   req.session.destroy(err => {
-    if (err) {
-      console.error(err);
-    }
-    res.redirect("/register");
+    if (err) console.error(err);
+    res.redirect("/login");
   });
 });
-
-
-
 
 
 
