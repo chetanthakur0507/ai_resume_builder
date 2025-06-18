@@ -1,0 +1,124 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resume Builder</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Resume Builder</h1>
+      <p>Fill out the form below to create your professional resume</p>
+    </header>
+
+    <% if (typeof error !== 'undefined') { %>
+      <div class="error-message">
+        <%= error %>
+      </div>
+    <% } %>
+
+    <form id="resumeForm" action="/generate-resume" method="POST">
+      <section class="form-section">
+        <h2>Personal Information</h2>
+        <div class="form-group">
+          <label for="name">Full Name *</label>
+          <input type="text" id="name" name="name" required 
+                 value="<%= typeof formData !== 'undefined' ? formData.name || '' : '' %>">
+        </div>
+        <div class="form-group">
+          <label for="email">Email *</label>
+          <input type="email" id="email" name="email" required
+                 value="<%= typeof formData !== 'undefined' ? formData.email || '' : '' %>">
+        </div>
+        <div class="form-group">
+          <label for="phone">Phone *</label>
+          <input type="tel" id="phone" name="phone" required
+                 value="<%= typeof formData !== 'undefined' ? formData.phone || '' : '' %>">
+        </div>
+        <div class="form-group">
+          <label for="address">Address</label>
+          <textarea id="address" name="address" rows="2"><%= typeof formData !== 'undefined' ? formData.address || '' : '' %></textarea>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <h2>Professional Summary</h2>
+        <div class="form-group">
+          <label for="summary">Summary</label>
+          <textarea id="summary" name="summary" rows="4"><%= typeof formData !== 'undefined' ? formData.summary || '' : '' %></textarea>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <h2>Education</h2>
+        <div id="education-container">
+          <div class="education-entry">
+            <div class="form-group">
+              <label for="education-degree-0">Degree/Certificate</label>
+              <input type="text" id="education-degree-0" name="education.degree" 
+                     value="<%= typeof formData !== 'undefined' && formData['education.degree'] ? (Array.isArray(formData['education.degree']) ? formData['education.degree'][0] : formData['education.degree']) : '' %>">
+            </div>
+            <div class="form-group">
+              <label for="education-institution-0">Institution</label>
+              <input type="text" id="education-institution-0" name="education.institution"
+                     value="<%= typeof formData !== 'undefined' && formData['education.institution'] ? (Array.isArray(formData['education.institution']) ? formData['education.institution'][0] : formData['education.institution']) : '' %>">
+            </div>
+            <div class="form-group">
+              <label for="education-year-0">Year</label>
+              <input type="text" id="education-year-0" name="education.year"
+                     value="<%= typeof formData !== 'undefined' && formData['education.year'] ? (Array.isArray(formData['education.year']) ? formData['education.year'][0] : formData['education.year']) : '' %>">
+            </div>
+          </div>
+        </div>
+        <button type="button" id="add-education" class="btn-secondary">Add More Education</button>
+      </section>
+
+      <section class="form-section">
+        <h2>Work Experience</h2>
+        <div id="experience-container">
+          <div class="experience-entry">
+            <div class="form-group">
+              <label for="experience-position-0">Position</label>
+              <input type="text" id="experience-position-0" name="experience.position"
+                     value="<%= typeof formData !== 'undefined' && formData['experience.position'] ? (Array.isArray(formData['experience.position']) ? formData['experience.position'][0] : formData['experience.position']) : '' %>">
+            </div>
+            <div class="form-group">
+              <label for="experience-company-0">Company</label>
+              <input type="text" id="experience-company-0" name="experience.company"
+                     value="<%= typeof formData !== 'undefined' && formData['experience.company'] ? (Array.isArray(formData['experience.company']) ? formData['experience.company'][0] : formData['experience.company']) : '' %>">
+            </div>
+            <div class="form-group">
+              <label for="experience-duration-0">Duration</label>
+              <input type="text" id="experience-duration-0" name="experience.duration"
+                     value="<%= typeof formData !== 'undefined' && formData['experience.duration'] ? (Array.isArray(formData['experience.duration']) ? formData['experience.duration'][0] : formData['experience.duration']) : '' %>">
+            </div>
+            <div class="form-group">
+              <label for="experience-description-0">Description</label>
+              <textarea id="experience-description-0" name="experience.description" rows="3"><%= typeof formData !== 'undefined' && formData['experience.description'] ? (Array.isArray(formData['experience.description']) ? formData['experience.description'][0] : formData['experience.description']) : '' %></textarea>
+            </div>
+          </div>
+        </div>
+        <button type="button" id="add-experience" class="btn-secondary">Add More Experience</button>
+      </section>
+
+      <section class="form-section">
+        <h2>Skills</h2>
+        <div class="form-group">
+          <label for="skills">Skills (comma separated)</label>
+          <textarea id="skills" name="skills" rows="3" placeholder="JavaScript, HTML, CSS, Node.js, Express"><%= typeof formData !== 'undefined' ? formData.skills || '' : '' %></textarea>
+        </div>
+      </section>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-primary">Generate Resume</button>
+        <button type="reset" class="btn-secondary">Reset Form</button>
+      </div>
+    </form>
+  </div>
+
+  <script src="/js/validation.js"></script>
+</body>
+</html>

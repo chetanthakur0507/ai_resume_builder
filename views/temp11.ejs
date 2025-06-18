@@ -1,0 +1,39 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title><%= user?.name || 'Resume' %></title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    h1 { font-size: 28px; margin-bottom: 5px; }
+    h2 { margin-top: 30px; }
+    ul { padding-left: 20px; }
+  </style>
+</head>
+<body>
+  <h1><%= user?.name || 'Your Name' %></h1>
+
+  <% if (user?.email) { %>
+    <p><strong>Email:</strong> <%= user.email %></p>
+  <% } %>
+
+  <% if (user?.phone) { %>
+    <p><strong>Phone:</strong> <%= user.phone %></p>
+  <% } %>
+
+  <% if (user?.skills) { %>
+    <h2>Skills</h2>
+    <ul>
+      <% user.skills.split(',').forEach(skill => { %>
+        <li><%= skill.trim() %></li>
+      <% }) %>
+    </ul>
+  <% } else { %>
+    <p><em>No skills provided.</em></p>
+  <% } %>
+</body>
+</html>
+
+
+
+

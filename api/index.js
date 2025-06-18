@@ -46,20 +46,34 @@ app.get('/templates/select', isAuthenticated, (req, res) => {
   const templates = [
     { name: 'Template 1', previewImage: '/images/template1.png', file: 'temp1.ejs' },
     { name: 'Template 2', previewImage: '/images/template1.png', file: 'temp2.ejs' },
-     { name: 'Template 1', previewImage: '/images/template1.png', file: 'temp1.ejs' },
-    { name: 'Template 2', previewImage: '/images/template1.png', file: 'temp2.ejs' },
-     { name: 'Template 1', previewImage: '/images/template1.png', file: 'temp1.ejs' },
-    { name: 'Template 2', previewImage: '/images/template1.png', file: 'temp2.ejs' },
-     { name: 'Template 1', previewImage: '/images/template1.png', file: 'temp1.ejs' },
-    { name: 'Template 2', previewImage: '/images/template1.png', file: 'temp2.ejs' },
-     { name: 'Template 1', previewImage: '/images/template1.png', file: 'temp1.ejs' },
-    { name: 'Template 2', previewImage: '/images/template1.png', file: 'temp2.ejs' },
-    { name: 'Template 3', previewImage: '/images/template1.png', file: 'temp3.ejs' }
+     { name: 'Template 3', previewImage: '/images/template1.png', file: 'temp3.ejs' },
+    { name: 'Template 4', previewImage: '/images/template1.png', file: 'temp4.ejs' },
+     { name: 'Template 5', previewImage: '/images/template1.png', file: 'temp5.ejs' },
+    { name: 'Template 6', previewImage: '/images/template1.png', file: 'temp6.ejs' },
+     { name: 'Template 7', previewImage: '/images/template1.png', file: 'temp7.ejs' },
+    { name: 'Template 8', previewImage: '/images/template1.png', file: 'temp8.ejs' },
+     { name: 'Template 9', previewImage: '/images/template1.png', file: 'temp9.ejs' },
+    { name: 'Template 10', previewImage: '/images/template1.png', file: 'temp10.ejs' },
+    { name: 'Template 11', previewImage: '/images/template1.png', file: 'temp11.ejs' }
   ];
 
   res.render('select-template', { templates: templates });
 });
 
+app.get('/resume/fill-details', isAuthenticated, (req, res) => {
+  res.render('resume-form'); // You’ll make this EJS file next
+});
+
+app.post('/resume/generate', isAuthenticated, (req, res) => {
+  const userData = req.body;
+  const selectedTemplate = req.session.selectedTemplate;
+
+  if (!selectedTemplate) {
+    return res.redirect('/templates/select');
+  }
+
+  res.render(selectedTemplate, { user: userData }); // e.g., renders temp1.ejs
+});
 
 // Authentication Protected Route
 app.use("/templates", isAuthenticated, templateRoutes);
@@ -112,6 +126,53 @@ app.get("/logout", (req, res) => {
 });
 
 
+app.post('/templates/select', isAuthenticated, (req, res) => {
+  const selectedTemplate = req.body.template; // e.g., 'temp1.ejs'
+  req.session.selectedTemplate = selectedTemplate;
+  res.redirect('/resume/fill-details'); // Next step: form to fill resume info
+});
+
+const puppeteer = require("puppeteer");
+
+app.post('/resume/download', isAuthenticated, async (req, res) => {
+  const userData = req.body;
+  const selectedTemplate = req.session.selectedTemplate;
+
+  if (!selectedTemplate) return res.redirect('/templates/select');
+
+  try {
+    // Launch Puppeteer browser
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+
+    // Render the EJS template to HTML
+    const ejs = require('ejs');
+    const fs = require('fs');
+    const path = require('path');
+
+    const filePath = path.join(__dirname, '..', 'views', selectedTemplate);
+    const html = await ejs.renderFile(filePath, { user: userData });
+
+    await page.setContent(html, { waitUntil: 'networkidle0' });
+
+    const pdfBuffer = await page.pdf({
+      format: 'A4',
+      printBackground: true
+    });
+
+    await browser.close();
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': 'attachment; filename="resume.pdf"',
+    });
+
+    res.send(pdfBuffer);
+  } catch (err) {
+    console.error("PDF generation error:", err);
+    res.status(500).send("Something went wrong while generating PDF");
+  }
+});
 
 
 
