@@ -1,39 +1,166 @@
-
 <!DOCTYPE html>
-<html>
+<html lang="en">
+   <link rel="stylesheet" href="/css/resume.css">
+
 <head>
-  <title><%= user?.name || 'Resume' %></title>
+  <meta charset="UTF-8">
+
+  <title><%= resumeData?.name || 'Resume' %></title>
+
+  <!-- Minimal Tailwind classes for PDF styling -->
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    h1 { font-size: 28px; margin-bottom: 5px; }
-    h2 { margin-top: 30px; }
-    ul { padding-left: 20px; }
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f3f4f6;
+      padding: 20px;
+    }
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    h1, h2 {
+      color: #1f2937;
+    }
+    h1 {
+      font-size: 24px;
+      font-weight: bold;
+    }
+    h2 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-top: 20px;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 5px;
+    }
+    p, li {
+      color: #374151;
+      font-size: 14px;
+    }
+    ul {
+      padding-left: 20px;
+    }
+    img.profile {
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .info {
+      flex: 1;
+    }
   </style>
 </head>
 <body>
-  <h1><%= user?.name || 'Your Name' %></h1>
 
-  <% if (user?.email) { %>
-    <p><strong>Email:</strong> <%= user.email %></p>
-  <% } %>
+   <!-- Action Buttons (Browser Only) -->
+    
 
-  <% if (user?.phone) { %>
-    <p><strong>Phone:</strong> <%= user.phone %></p>
-  <% } %>
+   
+  <div class="resume-container">
+    <div class="resume-actions">
+      <button id="download-pdf" class="btn-primary">Download PDF</button>
+      <a href="/resume/fill-details" class="btn-secondary">Edit Resume</a>
+    </div>
 
-  <% if (user?.skills) { %>
-    <h2>Skills</h2>
-    <ul>
-      <% user.skills.split(',').forEach(skill => { %>
-        <li><%= skill.trim() %></li>
-      <% }) %>
-    </ul>
-  <% } else { %>
-    <p><em>No skills provided.</em></p>
-  <% } %>
+  <div class="container">
+
+    <!-- Header -->
+    <div class="header">
+      <div class="info">
+        <h1><%= resumeData?.name || 'Your Name' %></h1>
+        <% if (resumeData?.email) { %>
+          <p><strong>Email:</strong> <%= resumeData.email %></p>
+        <% } %>
+        <% if (resumeData?.phone) { %>
+          <p><strong>Phone:</strong> <%= resumeData.phone %></p>
+        <% } %>
+        <% if (resumeData?.address) { %>
+          <p><strong>Address:</strong> <%= resumeData.address %></p>
+        <% } %>
+      </div>
+      <% if (resumeData?.photoPath) { %>
+        <img src="<%= resumeData.photoPath %>" alt="Profile Photo" class="profile">
+      <% } %>
+    </div>
+
+    <!-- Summary -->
+    <% if (resumeData?.summary) { %>
+      <section>
+        <h2>Professional Summary</h2>
+        <p><%= resumeData.summary %></p>
+      </section>
+    <% } %>
+
+    <!-- Skills -->
+    <% if (resumeData?.skills && resumeData.skills.length > 0) { %>
+      <section>
+        <h2>Skills</h2>
+        <ul>
+          <% resumeData.skills.forEach(skill => { %>
+            <li><%= skill %></li>
+          <% }) %>
+        </ul>
+      </section>
+    <% } %>
+
+    <!-- Education -->
+    <% if (resumeData?.education && resumeData.education.length > 0) { %>
+      <section>
+        <h2>Education</h2>
+        <ul>
+          <% resumeData.education.forEach(edu => { %>
+            <li>
+              <strong><%= edu.degree %></strong> – <%= edu.institution %> (<%= edu.year %>)
+            </li>
+          <% }) %>
+        </ul>
+      </section>
+    <% } %>
+
+    <!-- Experience -->
+    <% if (resumeData?.experience && resumeData.experience.length > 0) { %>
+      <section>
+        <h2>Work Experience</h2>
+        <ul>
+          <% resumeData.experience.forEach(exp => { %>
+            <li>
+              <p><strong><%= exp.position %></strong> at <%= exp.company %> (<%= exp.duration %>)</p>
+              <p style="font-style: italic;"><%= exp.description %></p>
+            </li>
+          <% }) %>
+        </ul>
+      </section>
+    <% } %>
+
+  </div>
+  <script>
+    document.getElementById('download-pdf').addEventListener('click', function() {
+      // Create resume data object
+      const resumeData = {
+        name: '<%= resumeData.name %>',
+        email: '<%= resumeData.email %>',
+        phone: '<%= resumeData.phone %>',
+        address: '<%= resumeData.address %>',
+        summary: '<%= resumeData.summary %>',
+        education: <%- JSON.stringify(resumeData.education) %>,
+        experience: <%- JSON.stringify(resumeData.experience) %>,
+        skills: <%- JSON.stringify(resumeData.skills) %>
+      };
+      
+      // Redirect to download endpoint with serialized data
+      window.location.href = '/download-pdf?data=' + encodeURIComponent(JSON.stringify(resumeData));
+    });
+  </script>
+
 </body>
 </html>
-
-
-
-

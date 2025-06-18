@@ -20,8 +20,17 @@
       </div>
     <% } %>
 
-    <form id="resumeForm" action="/generate-resume" method="POST">
+
+    <form id="resumeForm" action="/generate-resume" method="POST" enctype="multipart/form-data" >
+
       <section class="form-section">
+
+   <h2>Profile Photo</h2>
+  <div class="form-group">
+    <label for="photo">Upload Your Photo (JPEG/PNG, Max 2MB)</label>
+    <input type="file" id="photo" name="photo" accept="image/*">
+  </div>
+
         <h2>Personal Information</h2>
         <div class="form-group">
           <label for="name">Full Name *</label>

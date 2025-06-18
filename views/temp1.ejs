@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= resumeData.name %> - Resume</title>
+  <link rel="stylesheet" href="/css/resume.css">
+</head>
+<body>
+  <div class="resume-container">
+    <div class="resume-actions">
+      <button id="download-pdf" class="btn-primary">Download PDF</button>
+      <a href="/resume/fill-details" class="btn-secondary">Edit Resume</a>
+    </div>
+
+    <div class="resume">
+      <header class="resume-header">
+        <h1 class="resume-name"><%= resumeData.name %></h1>
+        <div class="resume-contact">
+          <% if (resumeData.email) { %>
+            <div class="contact-item">
+              <span class="contact-label">Email:</span>
+              <span class="contact-value"><%= resumeData.email %></span>
+            </div>
+          <% } %>
+          <% if (resumeData.phone) { %>
+            <div class="contact-item">
+              <span class="contact-label">Phone:</span>
+              <span class="contact-value"><%= resumeData.phone %></span>
+            </div>
+          <% } %>
+          <% if (resumeData.address) { %>
+            <div class="contact-item">
+              <span class="contact-label">Address:</span>
+              <span class="contact-value"><%= resumeData.address %></span>
+            </div>
+          <% } %>
+        </div>
+      </header>
+
+      <% if (resumeData.summary) { %>
+        <section class="resume-section">
+          <h2 class="section-title">Professional Summary</h2>
+          <div class="section-content">
+            <p><%= resumeData.summary %></p>
+          </div>
+        </section>
+      <% } %>
+
+      <% if (resumeData.education && resumeData.education.length > 0) { %>
+        <section class="resume-section">
+          <h2 class="section-title">Education</h2>
+          <div class="section-content">
+            <% resumeData.education.forEach(edu => { %>
+              <div class="education-item">
+                <div class="edu-header">
+                  <h3 class="edu-degree"><%= edu.degree %></h3>
+                  <span class="edu-year"><%= edu.year %></span>
+                </div>
+                <div class="edu-institution"><%= edu.institution %></div>
+              </div>
+            <% }); %>
+          </div>
+        </section>
+      <% } %>
+
+      <% if (resumeData.experience && resumeData.experience.length > 0) { %>
+        <section class="resume-section">
+          <h2 class="section-title">Work Experience</h2>
+          <div class="section-content">
+            <% resumeData.experience.forEach(exp => { %>
+              <div class="experience-item">
+                <div class="exp-header">
+                  <h3 class="exp-position"><%= exp.position %></h3>
+                  <span class="exp-duration"><%= exp.duration %></span>
+                </div>
+                <div class="exp-company"><%= exp.company %></div>
+                <% if (exp.description) { %>
+                  <p class="exp-description"><%= exp.description %></p>
+                <% } %>
+              </div>
+            <% }); %>
+          </div>
+        </section>
+      <% } %>
+
+      <% if (resumeData.skills && resumeData.skills.length > 0) { %>
+        <section class="resume-section">
+          <h2 class="section-title">Skills</h2>
+          <div class="section-content">
+            <ul class="skills-list">
+              <% resumeData.skills.forEach(skill => { %>
+                <li class="skill-item"><%= skill %></li>
+              <% }); %>
+            </ul>
+          </div>
+        </section>
+      <% } %>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('download-pdf').addEventListener('click', function() {
+      // Create resume data object
+      const resumeData = {
+        name: '<%= resumeData.name %>',
+        email: '<%= resumeData.email %>',
+        phone: '<%= resumeData.phone %>',
+        address: '<%= resumeData.address %>',
+        summary: '<%= resumeData.summary %>',
+        education: <%- JSON.stringify(resumeData.education) %>,
+        experience: <%- JSON.stringify(resumeData.experience) %>,
+        skills: <%- JSON.stringify(resumeData.skills) %>
+      };
+      
+      // Redirect to download endpoint with serialized data
+      window.location.href = '/download-pdf?data=' + encodeURIComponent(JSON.stringify(resumeData));
+    });
+  </script>
+</body>
+</html>

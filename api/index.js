@@ -41,6 +41,33 @@ app.use(express.static('public'));
 // URL-encoded middleware (POST data ke liye)
 app.use(express.urlencoded({ extended: true }));
 
+const multer = require('multer');
+
+
+// Storage config
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'public/uploads/');
+  },
+  filename: function (req, file, cb) {
+    const ext = path.extname(file.originalname);
+    cb(null, Date.now() + ext);
+  }
+});
+
+// File filter (optional)
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith('image/')) cb(null, true);
+  else cb(new Error('Only images are allowed'), false);
+};
+
+const upload = multer({
+  storage: storage,
+  fileFilter: fileFilter,
+  limits: { fileSize: 2 * 1024 * 1024 } // 2MB
+});
+
+
 // Your GET route for templates
 app.get('/templates/select', isAuthenticated, (req, res) => {
   const templates = [
@@ -176,86 +203,85 @@ app.post('/resume/download', isAuthenticated, async (req, res) => {
 
 
 
-// Handle form submission
-app.post("/generate-resume", (req, res) => {
+
+
+app.post("/generate-resume", upload.single("photo"), (req, res) => {
+  const selectedTemplate = req.session.selectedTemplate || "resume"; // Default template
+
   // Basic validation
-  const requiredFields = ["name", "email", "phone"]
+  const requiredFields = ["name", "email", "phone"];
   for (const field of requiredFields) {
     if (!req.body[field]) {
       return res.status(400).render("index", {
         error: `${field.charAt(0).toUpperCase() + field.slice(1)} is required`,
         formData: req.body,
-      })
+      });
     }
   }
 
-  // Email validation
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  // Email format check
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(req.body.email)) {
     return res.status(400).render("index", {
       error: "Please enter a valid email address",
       formData: req.body,
-    })
+    });
   }
 
-  // Process education and experience arrays
-  const education = []
-  if (req.body["education.degree"]) {
-    const degrees = Array.isArray(req.body["education.degree"])
-      ? req.body["education.degree"]
-      : [req.body["education.degree"]]
+  // Process education entries
+  const education = [];
+  const degrees = Array.isArray(req.body["education.degree"])
+    ? req.body["education.degree"]
+    : [req.body["education.degree"]];
+  const institutions = Array.isArray(req.body["education.institution"])
+    ? req.body["education.institution"]
+    : [req.body["education.institution"]];
+  const years = Array.isArray(req.body["education.year"])
+    ? req.body["education.year"]
+    : [req.body["education.year"]];
 
-    const institutions = Array.isArray(req.body["education.institution"])
-      ? req.body["education.institution"]
-      : [req.body["education.institution"]]
-
-    const years = Array.isArray(req.body["education.year"]) ? req.body["education.year"] : [req.body["education.year"]]
-
-    for (let i = 0; i < degrees.length; i++) {
-      if (degrees[i]) {
-        education.push({
-          degree: degrees[i],
-          institution: institutions[i] || "",
-          year: years[i] || "",
-        })
-      }
+  for (let i = 0; i < degrees.length; i++) {
+    if (degrees[i]) {
+      education.push({
+        degree: degrees[i],
+        institution: institutions[i] || "",
+        year: years[i] || "",
+      });
     }
   }
 
-  const experience = []
-  if (req.body["experience.position"]) {
-    const positions = Array.isArray(req.body["experience.position"])
-      ? req.body["experience.position"]
-      : [req.body["experience.position"]]
+  // Process experience entries
+  const experience = [];
+  const positions = Array.isArray(req.body["experience.position"])
+    ? req.body["experience.position"]
+    : [req.body["experience.position"]];
+  const companies = Array.isArray(req.body["experience.company"])
+    ? req.body["experience.company"]
+    : [req.body["experience.company"]];
+  const durations = Array.isArray(req.body["experience.duration"])
+    ? req.body["experience.duration"]
+    : [req.body["experience.duration"]];
+  const descriptions = Array.isArray(req.body["experience.description"])
+    ? req.body["experience.description"]
+    : [req.body["experience.description"]];
 
-    const companies = Array.isArray(req.body["experience.company"])
-      ? req.body["experience.company"]
-      : [req.body["experience.company"]]
-
-    const durations = Array.isArray(req.body["experience.duration"])
-      ? req.body["experience.duration"]
-      : [req.body["experience.duration"]]
-
-    const descriptions = Array.isArray(req.body["experience.description"])
-      ? req.body["experience.description"]
-      : [req.body["experience.description"]]
-
-    for (let i = 0; i < positions.length; i++) {
-      if (positions[i]) {
-        experience.push({
-          position: positions[i],
-          company: companies[i] || "",
-          duration: durations[i] || "",
-          description: descriptions[i] || "",
-        })
-      }
+  for (let i = 0; i < positions.length; i++) {
+    if (positions[i]) {
+      experience.push({
+        position: positions[i],
+        company: companies[i] || "",
+        duration: durations[i] || "",
+        description: descriptions[i] || "",
+      });
     }
   }
 
   // Process skills
-  const skills = req.body.skills ? req.body.skills.split(",").map((skill) => skill.trim()) : []
+  const skills = req.body.skills
+    ? req.body.skills.split(",").map((s) => s.trim())
+    : [];
 
-  // Create resume data object
+  // Final resume data object
   const resumeData = {
     name: req.body.name,
     email: req.body.email,
@@ -265,16 +291,39 @@ app.post("/generate-resume", (req, res) => {
     education: education,
     experience: experience,
     skills: skills,
-  }
+    photoPath: req.file ? `/uploads/${req.file.filename}` : null,
+  };
 
-  // Render resume template with data
-  res.render("resume", { resumeData })
-})
+  req.session.userData = resumeData;
 
-// Generate PDF from resume
+  // Render selected template
+ res.render(selectedTemplate, { resumeData });
+
+});
+
+
+
+
+
+
+
+const ejs = require("ejs");
+
+
+
 app.get("/download-pdf", async (req, res) => {
   try {
-    // Configure Puppeteer for Vercel
+    const resumeData = JSON.parse(decodeURIComponent(req.query.data || "{}"));
+
+
+   
+
+    // Render EJS template to HTML
+     const html = await ejs.renderFile(
+  path.join(__dirname, "../views/temp11.ejs"),
+  { resumeData } // no need to send `pdfRender` anymore unless you’re conditionally excluding code
+);
+
     const browser = await puppeteer.launch({
       headless: "new",
       args: [
@@ -287,35 +336,11 @@ app.get("/download-pdf", async (req, res) => {
         "--single-process",
         "--disable-gpu",
       ],
-    })
+    });
 
-    const page = await browser.newPage()
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: "networkidle0" });
 
-    // Create HTML content from the resume data
-    const resumeData = JSON.parse(decodeURIComponent(req.query.data || "{}"))
-
-    // Generate HTML content
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="UTF-8">
-        <title>${resumeData.name || "Resume"}</title>
-        <style>
-          ${getResumeCSS()}
-        </style>
-      </head>
-      <body>
-        <div class="resume">
-          ${generateResumeHTML(resumeData)}
-        </div>
-      </body>
-      </html>
-    `
-
-    await page.setContent(htmlContent, { waitUntil: "networkidle0" })
-
-    // Generate PDF
     const pdf = await page.pdf({
       format: "A4",
       printBackground: true,
@@ -325,134 +350,22 @@ app.get("/download-pdf", async (req, res) => {
         bottom: "20px",
         left: "20px",
       },
-    })
+    });
 
-    await browser.close()
+    await browser.close();
 
-    // Set response headers for PDF download
-    res.setHeader("Content-Type", "application/pdf")
-    res.setHeader("Content-Disposition", "attachment; filename=resume.pdf")
-
-    // Send the PDF as response
-    res.send(pdf)
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", "attachment; filename=resume.pdf");
+    res.send(pdf);
   } catch (error) {
-    console.error("Error generating PDF:", error)
-    res.status(500).send("Error generating PDF")
+    console.error("PDF generation error:", error);
+    res.status(500).send("Failed to generate PDF");
   }
-})
+});
 
-// Helper function to get resume CSS
-function getResumeCSS() {
-  return `
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
-    .resume { padding: 40px; }
-    .resume-header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #3498db; }
-    .resume-name { font-size: 28px; color: #2c3e50; margin-bottom: 15px; }
-    .resume-contact { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; }
-    .contact-item { font-size: 14px; }
-    .contact-label { font-weight: 600; margin-right: 5px; }
-    .resume-section { margin-bottom: 25px; }
-    .section-title { color: #3498db; font-size: 20px; margin-bottom: 15px; padding-bottom: 5px; border-bottom: 1px solid #eee; }
-    .section-content { padding-left: 10px; }
-    .education-item, .experience-item { margin-bottom: 15px; }
-    .edu-header, .exp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-    .edu-degree, .exp-position { font-size: 18px; font-weight: 600; color: #2c3e50; }
-    .edu-year, .exp-duration { font-style: italic; color: #7f8c8d; }
-    .edu-institution, .exp-company { font-size: 16px; color: #34495e; }
-    .exp-description { font-size: 15px; color: #555; text-align: justify; margin-top: 8px; }
-    .skills-list { display: flex; flex-wrap: wrap; gap: 10px; list-style-type: none; }
-    .skill-item { background-color: #ecf0f1; color: #2c3e50; padding: 5px 12px; border-radius: 15px; font-size: 14px; }
-  `
-}
 
-// Helper function to generate resume HTML
-function generateResumeHTML(resumeData) {
-  let html = `
-    <header class="resume-header">
-      <h1 class="resume-name">${resumeData.name || ""}</h1>
-      <div class="resume-contact">
-  `
 
-  if (resumeData.email) {
-    html += `<div class="contact-item"><span class="contact-label">Email:</span><span class="contact-value">${resumeData.email}</span></div>`
-  }
-  if (resumeData.phone) {
-    html += `<div class="contact-item"><span class="contact-label">Phone:</span><span class="contact-value">${resumeData.phone}</span></div>`
-  }
-  if (resumeData.address) {
-    html += `<div class="contact-item"><span class="contact-label">Address:</span><span class="contact-value">${resumeData.address}</span></div>`
-  }
 
-  html += `</div></header>`
-
-  if (resumeData.summary) {
-    html += `
-      <section class="resume-section">
-        <h2 class="section-title">Professional Summary</h2>
-        <div class="section-content">
-          <p>${resumeData.summary}</p>
-        </div>
-      </section>
-    `
-  }
-
-  if (resumeData.education && resumeData.education.length > 0) {
-    html += `
-      <section class="resume-section">
-        <h2 class="section-title">Education</h2>
-        <div class="section-content">
-    `
-    resumeData.education.forEach((edu) => {
-      html += `
-        <div class="education-item">
-          <div class="edu-header">
-            <h3 class="edu-degree">${edu.degree || ""}</h3>
-            <span class="edu-year">${edu.year || ""}</span>
-          </div>
-          <div class="edu-institution">${edu.institution || ""}</div>
-        </div>
-      `
-    })
-    html += `</div></section>`
-  }
-
-  if (resumeData.experience && resumeData.experience.length > 0) {
-    html += `
-      <section class="resume-section">
-        <h2 class="section-title">Work Experience</h2>
-        <div class="section-content">
-    `
-    resumeData.experience.forEach((exp) => {
-      html += `
-        <div class="experience-item">
-          <div class="exp-header">
-            <h3 class="exp-position">${exp.position || ""}</h3>
-            <span class="exp-duration">${exp.duration || ""}</span>
-          </div>
-          <div class="exp-company">${exp.company || ""}</div>
-          ${exp.description ? `<p class="exp-description">${exp.description}</p>` : ""}
-        </div>
-      `
-    })
-    html += `</div></section>`
-  }
-
-  if (resumeData.skills && resumeData.skills.length > 0) {
-    html += `
-      <section class="resume-section">
-        <h2 class="section-title">Skills</h2>
-        <div class="section-content">
-          <ul class="skills-list">
-    `
-    resumeData.skills.forEach((skill) => {
-      html += `<li class="skill-item">${skill}</li>`
-    })
-    html += `</ul></div></section>`
-  }
-
-  return html
-}
 
 module.exports = app
 const PORT = process.env.PORT || 3000;
